@@ -1,38 +1,38 @@
-// src/features/community/layouts/BarIcons_layout.jsx
 import React from "react";
 import {
     Bell,
-    MessageCircle,
+    MessageSquare,
     Users
-  } from "lucide-react";
+} from "lucide-react";
 
-export const BarIcons_layout = ({ onIconClick, activeIcon, onSectionChange, activeSection }) => {
+export const BarIcons_layout = ({ onSectionChange, activeSection }) => {
   return (
     <div className="w-full md:w-16 bg-gray-200 border-b md:border-b-0 md:border-r border-gray-300 flex md:flex-col items-center justify-around md:justify-start p-2">
+      {/* Botón para Notificaciones */}
       <button 
-        className={`p-2 ${activeIcon === "notifications" ? "text-green-600" : "text-gray-800"}`}
-        onClick={() => onIconClick && onIconClick("notifications")}
+        className={`p-2 ${activeSection === "notifications" ? "text-green-600" : "text-gray-800"} flex flex-col items-center`}
+        onClick={() => onSectionChange("notifications")}
       >
         <Bell className="w-5 h-5" />
+        <span className="text-xs mt-1 hidden md:block">Notificaciones</span>
       </button>
+      
+      {/* Botón para Foro */}
       <button 
-        className={`p-2 ${activeIcon === "messages" ? "text-green-600" : "text-gray-800"}`}
-        onClick={() => onIconClick && onIconClick("messages")}
+        className={`p-2 ${activeSection === "forum" ? "text-green-600" : "text-gray-800"} flex flex-col items-center`}
+        onClick={() => onSectionChange("forum")}
       >
-        <MessageCircle className="w-5 h-5" />
+        <MessageSquare className="w-5 h-5" />
+        <span className="text-xs mt-1 hidden md:block">Foro</span>
       </button>
-      <button 
-        className={`p-2 ${activeIcon === "users" ? "text-green-600" : "text-gray-800"}`}
-        onClick={() => onIconClick && onIconClick("users")}
-      >
-        <Users className="w-5 h-5" />
-      </button>
+      
+      {/* Botón para Grupos */}
       <button
+        className={`p-2 ${activeSection === "groups" ? "text-green-600" : "text-gray-800"} flex flex-col items-center`}
         onClick={() => onSectionChange("groups")}
-        className={`p-2 ${activeSection === "groups" ? "text-green-600" : "text-gray-800"}`}
       >
         <Users className="w-5 h-5" />
-        <span className="text-sm">Grupos</span>
+        <span className="text-xs mt-1 hidden md:block">Grupos</span>
       </button>
     </div>
   );

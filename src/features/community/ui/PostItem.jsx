@@ -1,112 +1,198 @@
-import React, { useContext } from "react";
-import { MessageCircle, Heart, ThumbsUp } from "lucide-react";
+import React, { useState, useContext, useEffect } from "react";
+import { MessageCircle, Heart, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
+import { usePost } from "../hooks/usePost";
 import { useReaction } from "../hooks/useReaction";
+import { useMessage } from "../hooks/useMessage";
 import { AuthContext } from "../../authentication/context/AuthContext";
+import { PostComments } from "./PostComments";
+import { EditPostForm } from "./EditPostForm";
+import { ConfirmationDialog } from "../ui/ConfirmationDialog";
 
 export const PostItem = ({ post }) => {
-  const { toggleReaction, hasUserReacted, getReactionCounts } = useReaction();
-  const { isAuthenticated } = useContext(AuthContext);
+  const { deletePost, canEditPost, canDeletePost, fetchAllPosts } = usePost();
+  const { getReactionCounts, hasUserReacted, toggleReaction } = useReaction();
+  const { getMessagesByPostId } = useMessage();
+  const { user } = useContext(AuthContext);
+  
+  const [showComments, setShowComments] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
+  
+  const reactionCounts = getReactionCounts(post.id);
+  const likeCount = reactionCounts['like'] || 0;
+  const hasLiked = hasUserReacted(post.id, 'like');
+  const comments = getMessagesByPostId(post.id);
+  const canEdit = canEditPost(post);
+  const canDelete = canDeletePost(post);
+  
+  const postDate = new Date(post.postDate || new Date());
+  const timeAgo = formatDistanceToNow(postDate, { addSuffix: true, locale: es });
 
-  // Formatear fecha
-  const formatPostDate = (dateString) => {
-    if (!dateString) return "Fecha desconocida";
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    
-    if (diffMins < 1) return "Ahora mismo";
-    if (diffMins < 60) return `Hace ${diffMins} minutos`;
-    if (diffHours < 24) return `Hace ${diffHours} horas`;
-    if (diffDays === 0) return "Hoy";
-    if (diffDays === 1) return "Ayer";
-    
-    return date.toLocaleDateString('es-ES', { 
-      day: 'numeric', 
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Efecto para ocultar el mensaje de éxito después de un tiempo
+  useEffect(() => {
+    if (editSuccess) {
+      const timer = setTimeout(() => {
+        setEditSuccess(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [editSuccess]);
+  
+  const handleLikeToggle = () => {
+    toggleReaction(post.id, 'like');
   };
-
-  // Obtener conteo de reacciones si es un post del contexto (con postId)
-  const reactionCounts = post.id ? getReactionCounts(post.id) : { LIKE: post.likes || 0 };
-
-  // Manejar clic en reacción
-  const handleReaction = () => {
-    if (isAuthenticated && post.id) {
-      toggleReaction(post.id, 'LIKE');
+  
+  const handleCommentsToggle = () => {
+    setShowComments(!showComments);
+  };
+  
+  const handleEditSuccess = () => {
+    setIsEditing(false);
+    setEditSuccess(true);
+    fetchAllPosts(); // Recargar los posts para obtener la versión actualizada
+  };
+  
+  const handleDeletePost = async () => {
+    const success = await deletePost(post.id);
+    if (success) {
+      setShowDeleteConfirm(false);
     }
   };
-
+  
   return (
-    <div className="border-b border-gray-200 p-4">
-      {post.hasImage && post.imageType === "header" && (
-        <div className="mb-3">
-          <img
-            src={post.imageUrl || post.multimediaContent || "/api/placeholder/800/200"}
-            alt="Cultivo hidropónico"
-            className="w-full h-40 object-cover rounded-lg"
-          />
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Mensaje de éxito para edición */}
+      {editSuccess && (
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-2">
+          La publicación ha sido actualizada exitosamente.
         </div>
       )}
-
-      <div className="flex items-start mb-2">
-        <div className="bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
-          <MessageCircle size={16} />
+      
+      {/* Modo edición - Ahora estará siempre disponible pero condicionalmente visible */}
+      {isEditing ? (
+        <div className="p-4">
+          <EditPostForm 
+            post={post} 
+            onCancel={() => setIsEditing(false)}
+            onSuccess={handleEditSuccess}
+          />
         </div>
-        <div>
-          <div className="font-medium text-sm">{post.author || post.user?.username || "Usuario"}</div>
-          <div className="text-gray-500 text-xs">{post.time || formatPostDate(post.createdAt)}</div>
-        </div>
-      </div>
-
-      <div className="ml-10">
-        <p className="text-sm whitespace-pre-line mb-2">{post.content}</p>
-
-        {post.hasImage && post.imageType === "dual" && (
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <img
-              src={post.imageUrl || "/api/placeholder/400/300"}
-              alt="Cultivo hidropónico"
-              className="w-full h-24 object-cover rounded-lg"
-            />
-            <img
-              src={post.imageUrl || "/api/placeholder/400/300"}
-              alt="Cultivo tradicional"
-              className="w-full h-24 object-cover rounded-lg"
-            />
-          </div>
-        )}
-
-        <div className="flex items-center text-sm mt-1">
-          <div className="flex items-center mr-4">
-            <button 
-              onClick={handleReaction}
-              className="flex items-center focus:outline-none"
-              disabled={!isAuthenticated}
-            >
-              <Heart
-                size={14}
-                className={`${post.id && hasUserReacted(post.id, 'LIKE') ? 'text-red-500 fill-current' : 'text-red-500'} mr-1`}
-              />
-              <span className="text-xs text-gray-600">{reactionCounts.LIKE || 0}</span>
-            </button>
-          </div>
-
-          {(post.comments || (post.id && post._count?.messages > 0)) && (
+      ) : (
+        <div className="p-4">
+          {/* Cabecera del post */}
+          <div className="flex items-start justify-between mb-2">
             <div className="flex items-center">
-              <ThumbsUp size={14} className="text-blue-500 mr-1" />
-              <span className="text-xs text-gray-600">
-                {post.comments || (post._count?.messages || 0)}
-              </span>
+              <div className="bg-gray-800 text-white rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                {post.author?.charAt(0).toUpperCase() || user?.firstName?.charAt(0) || "U"}
+              </div>
+              <div>
+                <div className="font-medium">
+                  {post.author || `${user?.firstName} ${user?.lastName}` || "Usuario"}
+                </div>
+                <div className="text-gray-500 text-xs">{timeAgo}</div>
+              </div>
+            </div>
+            
+            {/* Opciones (editar/eliminar) */}
+            {(canEdit || canDelete) && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowOptions(!showOptions)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </button>
+                
+                {showOptions && (
+                  <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                    {canEdit && (
+                      <button
+                        onClick={() => {
+                          setIsEditing(true);
+                          setShowOptions(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar publicación
+                      </button>
+                    )}
+                    
+                    {canDelete && (
+                      <button
+                        onClick={() => {
+                          setShowDeleteConfirm(true);
+                          setShowOptions(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Eliminar publicación
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* Contenido del post */}
+          <p className="text-sm whitespace-pre-line mb-4">{post.content}</p>
+          
+          {/* Imagen o multimedia si existe */}
+          {post.multimediaContent && (
+            <div className="mb-4">
+              <img
+                src={post.multimediaContent}
+                alt="Contenido multimedia"
+                className="w-full rounded-lg"
+              />
             </div>
           )}
+          
+          {/* Contador de reacciones y comentarios */}
+          <div className="flex justify-between text-sm border-t border-gray-100 pt-3">
+            <button
+              onClick={handleLikeToggle}
+              className={`flex items-center ${hasLiked ? 'text-red-500' : 'text-gray-500'}`}
+            >
+              <Heart className={`h-5 w-5 mr-1 ${hasLiked ? 'fill-current' : ''}`} />
+              <span>{likeCount} Me gusta</span>
+            </button>
+            
+            <button
+              onClick={handleCommentsToggle}
+              className="flex items-center text-gray-500"
+            >
+              <MessageCircle className="h-5 w-5 mr-1" />
+              <span>{comments.length} Comentarios</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+      
+      {/* Sección de comentarios (condicional) */}
+      {showComments && !isEditing && (
+        <div className="bg-gray-50 p-4 border-t border-gray-100">
+          <PostComments postId={post.id} />
+        </div>
+      )}
+      
+      {/* Diálogo de confirmación para eliminar */}
+      {showDeleteConfirm && (
+        <ConfirmationDialog
+          title="Eliminar publicación"
+          message="¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          onConfirm={handleDeletePost}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,3 +1,5 @@
+
+
 import { useState, useContext } from 'react';
 import { CommunityContext } from '../context/CommunityContext';
 import { AuthContext } from '../../authentication/context/AuthContext';
@@ -99,33 +101,42 @@ export const usePost = () => {
     setFormErrors({});
   };
   
-  /**
-   * Maneja el envío del formulario para crear un post
-   * @param {Event} e - Evento de envío del formulario
-   */
-  const handleCreatePost = async (e) => {
-    e.preventDefault();
-    
-    // Reset mensajes
-    setSuccessMessage('');
-    
-    // Validar formulario
-    if (!validateForm()) return;
-    
-    try {
-      const newPost = await contextCreatePost(formData);
-      if (newPost) {
-        setSuccessMessage('Post creado correctamente');
-        resetForm();
-        return newPost;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error al crear post:', error);
-      setFormErrors({ general: error.message || 'Error al crear el post' });
-      return null;
+ /**
+ * Maneja el envío del formulario para crear un post
+ * @param {Event} e - Evento de envío del formulario
+ */
+const handleCreatePost = async (e) => {
+  e.preventDefault();
+  
+  // Reset mensajes
+  setSuccessMessage('');
+  
+  // Validar formulario
+  if (!validateForm()) return null;
+  
+  // Verificar que contextCreatePost es una función válida
+  if (typeof contextCreatePost !== 'function') {
+    console.error('Error crítico: La función createPost no está disponible en el contexto');
+    setFormErrors({ 
+      general: 'Error de configuración: No se puede crear el post. Por favor, contacta al administrador.' 
+    });
+    return null;
+  }
+  
+  try {
+    const newPost = await contextCreatePost(formData);
+    if (newPost) {
+      setSuccessMessage('Post creado correctamente');
+      resetForm();
+      return newPost;
     }
-  };
+    return null;
+  } catch (error) {
+    console.error('Error al crear post:', error);
+    setFormErrors({ general: error.message || 'Error al crear el post' });
+    return null;
+  }
+};
   
   /**
    * Carga los datos de un post para editarlo

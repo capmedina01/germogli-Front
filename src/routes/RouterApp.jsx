@@ -8,7 +8,7 @@ import { RegisterPage } from "../features/authentication/pages/RegisterPage";
 import { ForgotPasswordPage } from "../features/authentication/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswordPage";
 // Importaciones del modulo de comunidad
-import { CommunityPage } from "../features/community/pages/CommunityPage";
+import { ComunityPage } from "../features/community/pages/ComunityPage";
 
 
 // Importaciones de modulo educativo
@@ -51,7 +51,7 @@ export const RouterApp = () => {
         />
 
         {/* Rutas del modulo de comunidad */}
-        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/comunity" element={<ComunityPage />} />
        
 
         {/* Rutas del modulo de profile */}
