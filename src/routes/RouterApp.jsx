@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoutes } from "../ui/components/ProtectedRoutes";
 import { NotFoundPage } from "../pages/NotFoundPage";
 // Importaciones del modulo de inicio y autenticacion
@@ -8,7 +8,8 @@ import { RegisterPage } from "../features/authentication/pages/RegisterPage";
 import { ForgotPasswordPage } from "../features/authentication/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswordPage";
 // Importaciones del modulo de comunidad
-import { ComunityPage } from "../features/community/pages/ComunityPage";
+import { CommunityLayout } from "../features/community/layouts/CommunityLayout";
+import { PostListView } from "../features/community/pages/PostListView";
 
 
 // Importaciones de modulo educativo
@@ -51,7 +52,13 @@ export const RouterApp = () => {
         />
 
         {/* Rutas del modulo de comunidad */}
-        <Route path="/comunity" element={<ComunityPage />} />
+        <Route path="/comunity" element={<CommunityLayout />}>
+          {/* Redirige por defecto a /comunity/posts */}
+          <Route index element={<Navigate to="/comunity/posts" replace />} />
+          {/* Subrutas del módulo de comunidad */}
+          <Route path="posts" element={<PostListView />} />
+          </Route>
+          
        
 
         {/* Rutas del modulo de profile */}

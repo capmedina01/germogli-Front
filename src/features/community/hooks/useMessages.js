@@ -1,21 +1,21 @@
 import { useContext, useState } from 'react';
-import { PostContext } from '../context/PostContext';
+import { MessageContext } from '../context/MessageContext';
 
 /**
- * Hook personalizado para manejar la lógica de posts.
+ * Hook personalizado para manejar la lógica de mensajes.
  * Este hook encapsula:
- * - Estados de carga y errores relacionados con posts.
- * - Handlers para crear, actualizar y eliminar posts.
+ * - Estados de carga y errores relacionados con los mensajes.
+ * - Handlers para crear y eliminar mensajes.
  */
-export const usePosts = () => {
-  const { posts, loading, error, fetchPosts } = useContext(PostContext); // Consumimos el contexto de posts.
-  const [formData, setFormData] = useState({ postType: '', content: '', multimediaContent: '', groupId: null, threadId: null });
+export const useMessages = () => {
+  const { messages, loading, error, fetchMessages } = useContext(MessageContext);
+  const [formData, setFormData] = useState({ postId: null, content: '', threadId: null, groupId: null });
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.postType.trim()) errors.postType = 'El tipo de post es obligatorio';
+    if (!formData.postId) errors.postId = 'El ID del post es obligatorio';
     if (!formData.content.trim()) errors.content = 'El contenido es obligatorio';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -27,32 +27,32 @@ export const usePosts = () => {
   };
 
   const resetForm = () => {
-    setFormData({ postType: '', content: '', multimediaContent: '', groupId: null, threadId: null });
+    setFormData({ postId: null, content: '', threadId: null, groupId: null });
     setFormErrors({});
   };
 
-  const handleCreatePost = async () => {
+  const handleCreateMessage = async () => {
     setSuccessMessage('');
     if (!validateForm()) return null;
     try {
       // Aquí llamaría a una función que interactúe con la API (communityService)
-      setSuccessMessage('Post creado correctamente');
+      setSuccessMessage('Mensaje enviado correctamente');
       resetForm();
     } catch (error) {
-      setFormErrors({ general: error.message || 'Error al crear el post' });
+      setFormErrors({ general: error.message || 'Error al enviar el mensaje' });
     }
   };
 
   return {
-    posts,
+    messages,
     loading,
     error,
     formData,
     formErrors,
     successMessage,
-    fetchPosts,
+    fetchMessages,
     handleChange,
     resetForm,
-    handleCreatePost,
+    handleCreateMessage,
   };
 };
