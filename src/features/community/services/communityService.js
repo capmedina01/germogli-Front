@@ -23,29 +23,33 @@ const handleError = (error, context) => {
 export const communityService = {
   // ==================== Peticiones para posts ====================
   createPost: async (postData) => {
-    try {
-      if (postData.file) {
-        const formData = new FormData();
-        Object.keys(postData).forEach((key) => {
-          if (key === 'file') {
-            formData.append('file', postData.file);
-          } else if (postData[key] !== null && postData[key] !== undefined) {
-            formData.append(key, postData[key]);
-          }
-        });
+  try {
+    let response;
 
-        const response = await API.post(ENDPOINTS.POSTS, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return response.data;
-      } else {
-        const response = await API.post(ENDPOINTS.POSTS, postData);
-        return response.data;
-      }
-    } catch (error) {
-      handleError(error, 'crear post');
+    if (postData.file) {
+      // Crear FormData solo si existe un archivo
+      const formData = new FormData();
+      Object.keys(postData).forEach((key) => {
+        if (postData[key] !== null && postData[key] !== undefined) {
+          formData.append(key, postData[key]);
+        }
+      });
+
+      // Enviar la solicitud con FormData
+      response = await API.post(ENDPOINTS.POSTS, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    } else {
+      // Enviar la solicitud sin archivo
+      response = await API.post(ENDPOINTS.POSTS, postData);
     }
-  },
+
+    return response.data;
+  } catch (error) {
+    handleError(error, 'crear post');
+    throw error; // Lanza el error después de manejarlo
+  }
+},
 
   getPostById: async (id) => {
     try {

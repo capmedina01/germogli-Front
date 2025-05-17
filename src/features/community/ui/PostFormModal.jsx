@@ -1,24 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { communityService } from "../services/communityService";
 
 export const PostFormModal = ({ onClose, onPostCreated }) => {
   const [content, setContent] = useState("");
   const [postType, setPostType] = useState("general");
   const [imageFile, setImageFile] = useState(null);
+  const [groupId, setGroupId] = useState(null); // Nuevo estado para el ID del grupo
+  const [groups, setGroups] = useState([]); // Lista de grupos disponibles
   const [error, setError] = useState("");
+
+  // Cargar grupos disponibles al montar el componente
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const data = await communityService.getGroups(); // Cambiar al endpoint correcto
+        setGroups(data);
+      } catch (error) {
+        console.error("Error al cargar los grupos:", error);
+      }
+    };
+
+    fetchGroups();
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
 
     if (file) {
-      // Verificar que el archivo sea una imagen y no supere 1 MB
-      if (!file.type.startsWith("image/")) {
-        setError("El archivo debe ser una imagen.");
+      // Verificar que el archivo sea una imagen/video y no supere 1 MB
+      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+        setError("El archivo debe ser una imagen o un video.");
         setImageFile(null);
         return;
       }
       if (file.size > 1024 * 1024) {
-        setError("La imagen no debe pesar más de 1 MB.");
+        setError("El archivo no debe pesar más de 1 MB.");
         setImageFile(null);
         return;
       }
@@ -31,22 +47,30 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Crear un FormData para manejar la imagen y otros datos
+    // Crear un FormData para manejar la imagen/video y otros datos
     const formData = new FormData();
     formData.append("content", content);
-    formData.append("post_type", postType);
-    formData.append("user_id", 1); // Cambiar al ID del usuario autenticado
+    formData.append("postType", postType);
+    formData.append("groupId", groupId || ""); // Si no hay grupo, enviar vacío
     if (imageFile) {
-      formData.append("multimedia_content", imageFile);
+      formData.append("multimediaContent", imageFile);
     }
+
+    // Imprimir datos enviados al servidor para depuración
+    console.log("Datos enviados al servidor:", Object.fromEntries(formData.entries()));
 
     try {
       const createdPost = await communityService.createPost(formData);
       onPostCreated(createdPost);
       onClose();
     } catch (error) {
-      console.error("Error al crear el post:", error);
-      setError("Hubo un problema al crear el post. Intenta nuevamente.");
+      console.error("Error al crear el post:", error.response?.data || error.message);
+
+      if (error.response?.data?.message) {
+        setError(error.response.data.message); // Mensaje del servidor
+      } else {
+        setError("Hubo un problema al crear el post. Intenta nuevamente.");
+      }
     }
   };
 
@@ -84,11 +108,29 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
-              Imagen (opcional, máximo 1 MB)
+              Grupo (opcional)
+            </label>
+            <select
+              className="w-full border rounded-md p-2 mt-1 text-sm"
+              value={groupId || ""}
+              onChange={(e) => setGroupId(e.target.value || null)}
+            >
+              <option value="">Seleccionar grupo</option>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Archivo Multimedia (opcional, máximo 1 MB)
             </label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               onChange={handleImageChange}
               className="w-full mt-1 text-sm"
             />
@@ -105,7 +147,7 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
             </button>
             <button
               type="submit"
-              className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
               disabled={!!error} // Deshabilitar si hay un error
             >
               Crear
