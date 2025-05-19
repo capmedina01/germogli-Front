@@ -13,6 +13,7 @@ import { PostListView } from "../features/community/pages/PostListView";
 import { GroupListView } from "../features/community/pages/GroupListView";
 import { GroupDetailsView } from "../features/community/pages/GroupDetailsView";
 import { ThreadForumView } from "../features/community/pages/ThreadForumView";
+import { AdminCommunityView } from "../features/community/pages/AdminCommunityView";
 
 
 // Importaciones de modulo educativo
@@ -63,6 +64,7 @@ export const RouterApp = () => {
           <Route path="groups" element={<GroupListView />} />
           <Route path="groups/:groupId" element={<GroupDetailsView />} />
           <Route path="ThreadForum" element={<ThreadForumView />} />
+          <Route path="admin" element={<AdminCommunityView />} />
         </Route>
           
        
