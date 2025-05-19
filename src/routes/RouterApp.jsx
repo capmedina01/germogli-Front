@@ -10,6 +10,9 @@ import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswor
 // Importaciones del modulo de comunidad
 import { CommunityLayout } from "../features/community/layouts/CommunityLayout";
 import { PostListView } from "../features/community/pages/PostListView";
+import { GroupListView } from "../features/community/pages/GroupListView";
+import { GroupDetailsView } from "../features/community/pages/GroupDetailsView";
+import { ThreadForumView } from "../features/community/pages/ThreadForumView";
 
 
 // Importaciones de modulo educativo
@@ -57,7 +60,10 @@ export const RouterApp = () => {
           <Route index element={<Navigate to="/comunity/posts" replace />} />
           {/* Subrutas del módulo de comunidad */}
           <Route path="posts" element={<PostListView />} />
-          </Route>
+          <Route path="groups" element={<GroupListView />} />
+          <Route path="groups/:groupId" element={<GroupDetailsView />} />
+          <Route path="ThreadForum" element={<ThreadForumView />} />
+        </Route>
           
        
 

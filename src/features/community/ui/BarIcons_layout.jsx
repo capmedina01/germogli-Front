@@ -27,7 +27,7 @@ export const BarIcons_layout = ({ activeSection }) => {
         className={`p-2 flex flex-col items-center ${
           activeSection === "forum" ? "text-green-600" : "text-gray-800"
         }`}
-        onClick={() => navigate("/comunity/forum")}
+        onClick={() => navigate("/comunity/ThreadForum")}
       >
         <MessageSquare className="w-6 h-6" />
         <span className="text-xs mt-1 hidden md:block">Foro</span>
