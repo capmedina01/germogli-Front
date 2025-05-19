@@ -172,13 +172,24 @@ export const communityService = {
   },
 
   getAllThreads: async () => {
-    try {
-      const response = await API.get(ENDPOINTS.THREADS);
-      return response.data;
-    } catch (error) {
-      handleError(error, 'obtener todos los hilos');
+  try {
+    const response = await API.get(ENDPOINTS.THREADS);
+    console.log("Respuesta de la API de hilos:", response?.data);
+    // Validación profesional: asegúrate de que response.data.data sea un array
+    if (
+      response?.data &&
+      Array.isArray(response.data.data)
+    ) {
+      return response.data.data; // Devuelve solo el array de hilos
+    } else {
+      console.warn("La respuesta de la API de hilos no contiene un array válido en data:", response?.data);
+      return []; // Siempre retorna un array, aunque esté vacío
     }
-  },
+  } catch (error) {
+    handleError(error, 'obtener todos los hilos');
+    return []; // Previene que el componente falle por error de red o formato
+  }
+},
 
   updateThread: async (id, updateData) => {
     try {

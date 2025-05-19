@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from "react";
-
-// Simulación de grupos temporales
-const exampleGroups = [
-  { id: 1, name: "Cultivos orgánicos" },
-  { id: 2, name: "Hidroponía en casa" },
-];
+import { communityService } from "../services/communityService";
 
 export const ThreadFormModal = ({ onClose, onThreadCreated }) => {
   const [groups, setGroups] = useState([]);
@@ -12,23 +7,37 @@ export const ThreadFormModal = ({ onClose, onThreadCreated }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // Simula fetch de grupos (en producción usa communityService.getAllGroups)
+  // Fetch real groups from the API
   useEffect(() => {
-    setGroups(exampleGroups);
+    const fetchGroups = async () => {
+      try {
+        const data = await communityService.getAllGroups();
+        // data can be an array or { message, data: [...] }
+        const groupsArr = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+          ? data.data
+          : [];
+        setGroups(groupsArr);
+      } catch (err) {
+        setGroups([]); // fallback to empty array if error
+      }
+    };
+    fetchGroups();
   }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simulamos el usuario logueado (ajusta según tu auth)
+    // Simula el usuario logueado (ajusta según tu auth)
     const user_id = 1;
     const newThread = {
       id: Date.now(),
-      group_id: parseInt(groupId),
+      group_id: groupId ? parseInt(groupId) : null,
       user_id,
       title,
       content,
       authorName: "Usuario Actual",
-      createdAt: new Date().toISOString(),
+      creation_date: new Date().toISOString(),
     };
     onThreadCreated(newThread);
     onClose();
@@ -71,22 +80,25 @@ export const ThreadFormModal = ({ onClose, onThreadCreated }) => {
         <div className="mb-4">
           <label className="block mb-1 font-semibold">Grupo</label>
           <select
-            required
             className="w-full border rounded px-3 py-2"
             value={groupId}
             onChange={(e) => setGroupId(e.target.value)}
           >
-            <option value="">Seleccione un grupo</option>
-            {groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
+            <option value="">Selecciona un grupo (opcional)</option>
+            {groups.length === 0 ? (
+              <option value="">No hay grupos disponibles</option>
+            ) : (
+              groups.map((group) => (
+                <option key={group.group_id || group.id} value={group.group_id || group.id}>
+                  {group.name}
+                </option>
+              ))
+            )}
           </select>
         </div>
         <button
           type="submit"
-          className="bg-green-600 text-white px-4 py-2 rounded font-semibold hover:bg-green-700 w-full"
+          className="bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-green-700 w-full"
         >
           Publicar hilo
         </button>

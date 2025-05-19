@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { FaUserCircle, FaSearch, FaPlus } from "react-icons/fa";
 import { ThreadFormModal } from "../ui/ThreadFormModal";
+import { communityService } from "../services/communityService";
 
 const exampleThreads = [
   {
-    id: 1,
+    thread_id: 1,
     authorName: "Santiago Ramirez",
-    createdAt: "2024-04-27T13:09:00",
+    creation_date: "2024-04-27T13:09:00",
     title: "¿Qué sistema de hidroponía es mejor?",
     content:
       "¡Hola a todos! Estoy comenzando con hidroponía y quiero saber qué tipo de sistema es mejor para cultivos de lechuga. ¿Alguna recomendación?",
@@ -20,20 +21,30 @@ export const ThreadForumView = () => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    // Aquí iría el fetch real de los hilos. Si no hay, usa los de ejemplo.
-    setThreads(exampleThreads);
+    const fetchThreads = async () => {
+      try {
+        const response = await communityService.getAllThreads();
+        // Ajusta si tu API retorna { message, data: [...] }
+        const threadsData = Array.isArray(response.data) ? response.data : [];
+        setThreads(threadsData.length ? threadsData : exampleThreads);
+      } catch (err) {
+        setThreads(exampleThreads);
+      }
+    };
+    fetchThreads();
   }, []);
 
   const filteredThreads = threads
-    .filter((thread) =>
-      thread.content.toLowerCase().includes(search.toLowerCase()) ||
-      thread.title.toLowerCase().includes(search.toLowerCase())
+    .filter(
+      (thread) =>
+        thread.content.toLowerCase().includes(search.toLowerCase()) ||
+        thread.title.toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => {
       if (sortOption === "recent") {
-        return new Date(b.createdAt) - new Date(a.createdAt);
+        return new Date(b.creation_date) - new Date(a.creation_date);
       } else {
-        return new Date(a.createdAt) - new Date(b.createdAt);
+        return new Date(a.creation_date) - new Date(b.creation_date);
       }
     });
 
@@ -48,7 +59,7 @@ export const ThreadForumView = () => {
       <div className="flex items-center justify-between border-b pb-2 mb-5">
         <h1 className="text-2xl font-bold">Foro de discusion</h1>
         <button
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded font-semibold hover:bg-green-700"
+          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-green-700"
           onClick={() => setShowModal(true)}
         >
           <FaPlus /> Crear hilo
@@ -105,21 +116,21 @@ export const ThreadForumView = () => {
           </div>
         ) : (
           filteredThreads.map((thread) => (
-            <div key={thread.id} className="mb-7">
+            <div key={thread.thread_id || thread.id} className="mb-7">
               <div className="flex items-start gap-3">
                 <FaUserCircle className="text-3xl text-gray-400 mt-1" />
                 <div className="flex-1">
                   <div className="font-semibold">
-                    {thread.authorName}{" "}
+                    {thread.authorName || "Usuario"}{" "}
                     <span className="text-xs font-normal text-gray-600">
                       —{" "}
-                      {new Date(thread.createdAt).toLocaleDateString("es-ES", {
+                      {new Date(thread.creation_date).toLocaleDateString("es-ES", {
                         year: "numeric",
                         month: "numeric",
                         day: "numeric",
                       })}
                       ,{" "}
-                      {new Date(thread.createdAt).toLocaleTimeString("es-ES", {
+                      {new Date(thread.creation_date).toLocaleTimeString("es-ES", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
@@ -132,7 +143,7 @@ export const ThreadForumView = () => {
               <div className="text-xs text-gray-400 mt-2 mb-2 flex items-center">
                 <div className="flex-grow border-t border-gray-200"></div>
                 <span className="mx-2">
-                  {new Date(thread.createdAt).toLocaleDateString("es-ES", {
+                  {new Date(thread.creation_date).toLocaleDateString("es-ES", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -145,7 +156,10 @@ export const ThreadForumView = () => {
         )}
       </div>
       {showModal && (
-        <ThreadFormModal onClose={() => setShowModal(false)} onThreadCreated={handleThreadCreated} />
+        <ThreadFormModal
+          onClose={() => setShowModal(false)}
+          onThreadCreated={handleThreadCreated}
+        />
       )}
     </div>
   );
