@@ -3,10 +3,12 @@ import { useParams } from "react-router-dom";
 import { FaHashtag } from "react-icons/fa";
 import { communityService } from "../services/communityService";
 import { ThreadList } from "../ui/ThreadList";
+import { useGroup } from "../hooks/useGroup";
 
 export const GroupDetailsView = () => {
   const { groupId } = useParams();
   const [group, setGroup] = useState(null);
+  const { handleJoinGroup, successMessage, formErrors } = useGroup();
 
   // Datos de ejemplo para los hilos
   const exampleThreads = [
@@ -59,7 +61,8 @@ export const GroupDetailsView = () => {
       {/* Mensaje de bienvenida */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold">
-          ¡Te damos la bienvenida a <span className="text-primary"># {group.name}!</span>
+          ¡Te damos la bienvenida a{" "}
+          <span className="text-primary"># {group.name}!</span>
         </h2>
         <p className="text-lg text-gray-800 mt-2">
           Un espacio para aprender, compartir experiencias sobre hidroponía.
@@ -85,12 +88,14 @@ export const GroupDetailsView = () => {
 
       {/* Botón para unirse */}
       <div className="mb-8">
-        <button
-          className="bg-green-600 text-white px-6 py-2 rounded font-semibold hover:bg-green-700"
-          onClick={() => alert("Funcionalidad para unirse al grupo")}
-        >
+        <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
+         onClick={() => handleJoinGroup(group.id)}>
           Unirse al grupo
         </button>
+        {successMessage && <p className="text-green-600">{successMessage}</p>}
+        {formErrors.general && (
+          <p className="text-red-600">{formErrors.general}</p>
+        )}
       </div>
 
       {/* Sección de hilos */}

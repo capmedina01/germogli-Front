@@ -22,34 +22,35 @@ const handleError = (error, context) => {
 
 export const communityService = {
   // ==================== Peticiones para posts ====================
-  createPost: async (postData) => {
-  try {
-    let response;
+createPost: async (postData) => {
+    try {
+      let response;
 
-    if (postData.file) {
-      // Crear FormData solo si existe un archivo
-      const formData = new FormData();
-      Object.keys(postData).forEach((key) => {
-        if (postData[key] !== null && postData[key] !== undefined) {
-          formData.append(key, postData[key]);
+      // Cambia 'file' por 'multimediaContent'
+      if (postData instanceof FormData || postData.multimediaContent) {
+        // Permite que le pases directamente un FormData
+        const formData = postData instanceof FormData ? postData : new FormData();
+        if (!(postData instanceof FormData)) {
+          Object.keys(postData).forEach((key) => {
+            if (postData[key] !== null && postData[key] !== undefined) {
+              formData.append(key, postData[key]);
+            }
+          });
         }
-      });
+        response = await API.post(ENDPOINTS.POSTS, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } else {
+        response = await API.post(ENDPOINTS.POSTS, postData);
+      }
 
-      // Enviar la solicitud con FormData
-      response = await API.post(ENDPOINTS.POSTS, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-    } else {
-      // Enviar la solicitud sin archivo
-      response = await API.post(ENDPOINTS.POSTS, postData);
+      return response.data;
+    } catch (error) {
+      handleError(error, 'crear post');
+      throw error;
     }
-
-    return response.data;
-  } catch (error) {
-    handleError(error, 'crear post');
-    throw error; // Lanza el error después de manejarlo
-  }
-},
+  },
+ 
 
   getPostById: async (id) => {
     try {
@@ -149,6 +150,21 @@ export const communityService = {
       return response.data;
     } catch (error) {
       handleError(error, `eliminar grupo con ID ${id}`);
+    }
+  },
+
+  /**
+   * Hace que el usuario autenticado se una a un grupo.
+   * @param {number|string} groupId - ID del grupo al que el usuario se quiere unir.
+   * @returns {Promise<any>} - Respuesta del servidor.
+   */
+  joinGroup: async (groupId) => {
+    try {
+      const response = await API.post(`${ENDPOINTS.GROUP_BY_ID(groupId)}/join`);
+      return response.data;
+    } catch (error) {
+      handleError(error, `unirse al grupo con ID ${groupId}`);
+      throw error;
     }
   },
 

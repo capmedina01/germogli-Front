@@ -46,13 +46,13 @@ export const GroupProvider = ({ children }) => {
     );
 };
 
-/**
- * Hook personalizado para consumir el contexto de grupos.
- */
-export const useGroups = () => {
-    const context = useContext(GroupContext);
-    if (!context) {
-        throw new Error('useGroups debe ser usado dentro de un GroupProvider');
-    }
-    return context;
-};
+// /**
+//  * Hook personalizado para consumir el contexto de grupos.
+//  */
+// export const useGroups = () => {
+//     const context = useContext(GroupContext);
+//     if (!context) {
+//         throw new Error('useGroups debe ser usado dentro de un GroupProvider');
+//     }
+//     return context;
+// };
