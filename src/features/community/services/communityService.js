@@ -22,27 +22,44 @@ const handleError = (error, context) => {
 
 export const communityService = {
   // ==================== Peticiones para posts ====================
-createPost: async (postData) => {
+  getPostsByGroup: async (groupId) => {
     try {
-      let response;
+      const response = await API.get(`/posts/by-group/${groupId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener publicaciones del grupo ${groupId}`);
+      throw error;
+    }
+  },
 
-      // Cambia 'file' por 'multimediaContent'
-      if (postData instanceof FormData || postData.multimediaContent) {
-        // Permite que le pases directamente un FormData
-        const formData = postData instanceof FormData ? postData : new FormData();
-        if (!(postData instanceof FormData)) {
-          Object.keys(postData).forEach((key) => {
-            if (postData[key] !== null && postData[key] !== undefined) {
-              formData.append(key, postData[key]);
-            }
-          });
-        }
-        response = await API.post(ENDPOINTS.POSTS, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      } else {
-        response = await API.post(ENDPOINTS.POSTS, postData);
-      }
+  getPostsByUser: async (userId = null) => {
+    try {
+      const url = userId ? `/posts/by-user?userId=${userId}` : '/posts/by-user';
+      const response = await API.get(url);
+      return response.data;
+    } catch (error) {
+      handleError(error, 'obtener publicaciones del usuario');
+      throw error;
+    }
+  },
+
+  /**
+   * Crea una nueva publicación
+   * @param {Object|FormData} postData - Datos del post (objeto normal o FormData)
+   * @returns {Promise<Object>} Respuesta del servidor
+   */
+  createPost: async (postData) => {
+    try {
+      // Detectar si estamos enviando FormData
+      const isFormData = postData instanceof FormData;
+
+      // Configurar headers correctamente según el tipo de datos
+      const config = isFormData ? {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      } : undefined;
+
+      // Realizar la petición con la configuración adecuada
+      const response = await API.post(ENDPOINTS.POSTS, postData, config);
 
       return response.data;
     } catch (error) {
@@ -50,7 +67,6 @@ createPost: async (postData) => {
       throw error;
     }
   },
- 
 
   getPostById: async (id) => {
     try {
@@ -169,6 +185,39 @@ createPost: async (postData) => {
   },
 
   // ==================== Peticiones para hilos ====================
+  getThreadsByGroup: async (groupId) => {
+    try {
+      const response = await API.get(`/threads/by-group/${groupId}`);
+      console.log("Respuesta de la API de hilos:", response?.data);
+      
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener hilos del grupo ${groupId}`);
+      throw error;
+    }
+  },
+
+  getThreadsByUser: async (userId = null) => {
+    try {
+      const url = userId ? `/threads/by-user?userId=${userId}` : '/threads/by-user';
+      const response = await API.get(url);
+      return response.data;
+    } catch (error) {
+      handleError(error, 'obtener hilos del usuario');
+      throw error;
+    }
+  },
+
+  getForumThreads: async () => {
+    try {
+      const response = await API.get('/threads/forum');
+      return response.data;
+    } catch (error) {
+      handleError(error, 'obtener hilos del foro');
+      throw error;
+    }
+  },
+
   createThread: async (threadData) => {
     try {
       const response = await API.post(ENDPOINTS.THREADS, threadData);
@@ -188,24 +237,24 @@ createPost: async (postData) => {
   },
 
   getAllThreads: async () => {
-  try {
-    const response = await API.get(ENDPOINTS.THREADS);
-    console.log("Respuesta de la API de hilos:", response?.data);
-    // Validación profesional: asegúrate de que response.data.data sea un array
-    if (
-      response?.data &&
-      Array.isArray(response.data.data)
-    ) {
-      return response.data.data; // Devuelve solo el array de hilos
-    } else {
-      console.warn("La respuesta de la API de hilos no contiene un array válido en data:", response?.data);
-      return []; // Siempre retorna un array, aunque esté vacío
+    try {
+      const response = await API.get(ENDPOINTS.THREADS);
+      console.log("Respuesta de la API de hilos:", response?.data);
+      // Validación profesional: asegúrate de que response.data.data sea un array
+      if (
+        response?.data &&
+        Array.isArray(response.data.data)
+      ) {
+        return response.data.data; // Devuelve solo el array de hilos
+      } else {
+        console.warn("La respuesta de la API de hilos no contiene un array válido en data:", response?.data);
+        return []; // Siempre retorna un array, aunque esté vacío
+      }
+    } catch (error) {
+      handleError(error, 'obtener todos los hilos');
+      return []; // Previene que el componente falle por error de red o formato
     }
-  } catch (error) {
-    handleError(error, 'obtener todos los hilos');
-    return []; // Previene que el componente falle por error de red o formato
-  }
-},
+  },
 
   updateThread: async (id, updateData) => {
     try {
