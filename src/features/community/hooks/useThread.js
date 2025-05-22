@@ -120,8 +120,6 @@ export const useThread = () => {
 
 // Función para obtener hilos de un grupo específico
 const fetchThreadsByGroup = async (groupId) => {
-  console.log("Solicitando hilos para groupId:", groupId);
-
   // Validación: no llamar al backend si el groupId es inválido
   if (
     groupId === undefined ||
@@ -141,16 +139,8 @@ const fetchThreadsByGroup = async (groupId) => {
 
   try {
     const response = await communityService.getThreadsByGroup(groupId);
-    // Ajusta según cómo venga tu respuesta:
-    if (response && response.data) {
-      setThreads(response.data);
-    } else if (Array.isArray(response)) {
-      setThreads(response);
-    } else {
-      setThreads([]);
-    }
+    setThreads(response.data || []);
   } catch (err) {
-    console.error(`Error al obtener hilos del grupo ${groupId}:`, err);
     setError(err.message || "Error al obtener los hilos del grupo");
     setThreads([]);
   } finally {
